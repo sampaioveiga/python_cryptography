@@ -1,31 +1,14 @@
-# AES encryption of file
+'This is a very secret messate'.encode('utf-8')# AES encryption of text
 
 from Crypto.Cipher import AES
-from Crypto import Random
-import os, random, struct
 
-def encrypt_file(key, filename, chunk_size=64*1024):
-    output_filename = filename + '.encrypted'
+key = b'1234567890123456'
+data = input('Input your message here: ')
 
-    #iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))
-    rnd = Random.new()
-    iv = rnd.read(16)
+cipher = AES.new(key, AES.MODE_EAX)
+ciphertext, tag = cipher.encrypt_and_digest(data.encode('utf-8'))
 
-    encryptor = AES.new(key, AES.MODE_CBC, iv)
-    filesize = os.path.getsize(filename)
+file_out = open('encrypted.bin', 'wb')
+[ file_out.write(x) for x in (cipher.nonce, tag, ciphertext) ]
 
-    with open(filename, 'rb') as inputfile:
-        with open(output_filename, 'wb') as outputfile:
-            outputfile.write(struct.pack('<Q', filesize))
-            outputfile.write(iv)
-
-            while True:
-                chunk = inputfile.read(chunk_size)
-                if len(chunk) == 0:
-                    break
-                elif len(chunk) %16 != 0:
-                    chunk += ' ' * (16 - len(chunk) % 16)
-
-                outputfile.write(encryptor.encrypt(chunk))
-
-encrypt_file('abcdefghi123456', 'sample_file.txt')
+file_out.close()
